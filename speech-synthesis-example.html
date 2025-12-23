@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Synthesis Demo - Text to Speech</title>
+    <meta name="description"
+        content="Interactive demonstration of the Web Speech API's Speech Synthesis feature for text-to-speech conversion">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-color: #10b981;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-glow: 0 0 30px rgba(102, 126, 234, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(102, 126, 234, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(118, 75, 162, 0.15) 0px, transparent 50%);
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-glow);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 120px;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .slider-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .slider-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 0.25rem 0.625rem;
+            border-radius: 6px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 10px;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .emotion-presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .emotion-btn {
+            padding: 0.75rem 1rem;
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .emotion-btn:hover {
+            background: var(--bg-dark);
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .emotion-btn.active {
+            background: var(--primary-gradient);
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 5px 15px -3px rgba(102, 126, 234, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:not(:disabled):hover {
+            background: var(--bg-dark);
+            border-color: #667eea;
+        }
+
+        .btn-danger {
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .btn-danger:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(245, 87, 108, 0.5);
+        }
+
+        .status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-input);
+            border-radius: 12px;
+            border-left: 4px solid var(--success-color);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .status.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .slider-group {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .emotion-presets {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔊 Speech Synthesis</h1>
+            <p class="subtitle">Transform text into natural speech using the Web Speech API</p>
+
+            <div class="form-group">
+                <label for="text-input">Enter Text to Speak</label>
+                <textarea id="text-input"
+                    placeholder="Type or paste your text here...">Hello! Welcome to the Speech Synthesis demonstration. This tool uses the Web Speech API to convert text into natural-sounding speech. Try adjusting the voice, rate, pitch, and volume controls to customize the output.</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="voice-select">Select Voice</label>
+                <select id="voice-select">
+                    <option value="">Loading voices...</option>
+                </select>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span class="slider-label">Rate</span>
+                        <span class="slider-value" id="rate-value">1.0</span>
+                    </div>
+                    <input type="range" id="rate-slider" min="0.1" max="2" step="0.1" value="1">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span class="slider-label">Pitch</span>
+                        <span class="slider-value" id="pitch-value">1.0</span>
+                    </div>
+                    <input type="range" id="pitch-slider" min="0" max="2" step="0.1" value="1">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span class="slider-label">Volume</span>
+                        <span class="slider-value" id="volume-value">1.0</span>
+                    </div>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Emotion Presets</label>
+                <div class="emotion-presets">
+                    <button class="emotion-btn" data-emotion="neutral">😐 Neutral</button>
+                    <button class="emotion-btn" data-emotion="happy">😊 Happy</button>
+                    <button class="emotion-btn" data-emotion="sad">😢 Sad</button>
+                    <button class="emotion-btn" data-emotion="angry">😠 Angry</button>
+                    <button class="emotion-btn" data-emotion="excited">🤩 Excited</button>
+                    <button class="emotion-btn" data-emotion="calm">😌 Calm</button>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="speak-btn" class="btn-primary">▶ Speak</button>
+                <button id="pause-resume-btn" class="btn-secondary" disabled>⏸ Pause</button>
+                <button id="stop-btn" class="btn-danger" disabled>⏹ Stop</button>
+            </div>
+
+            <div id="status" class="status"></div>
+
+            <div class="info-badge">
+                💡 Tip: Try different emotion presets to change the voice tone and delivery style
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Speech Synthesis API
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let currentUtterance = null;
+
+        // DOM Elements
+        const textInput = document.getElementById('text-input');
+        const voiceSelect = document.getElementById('voice-select');
+        const rateSlider = document.getElementById('rate-slider');
+        const pitchSlider = document.getElementById('pitch-slider');
+        const volumeSlider = document.getElementById('volume-slider');
+        const rateValue = document.getElementById('rate-value');
+        const pitchValue = document.getElementById('pitch-value');
+        const volumeValue = document.getElementById('volume-value');
+        const speakBtn = document.getElementById('speak-btn');
+        const pauseResumeBtn = document.getElementById('pause-resume-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const status = document.getElementById('status');
+        const emotionBtns = document.querySelectorAll('.emotion-btn');
+
+        // Emotion presets - more dramatic for better recognition
+        const emotionPresets = {
+            neutral: { rate: 1.0, pitch: 1.0, volume: 1.0 },
+            happy: { rate: 1.4, pitch: 1.8, volume: 1.0 },
+            sad: { rate: 0.6, pitch: 0.5, volume: 0.6 },
+            angry: { rate: 1.5, pitch: 1.9, volume: 1.0 },
+            excited: { rate: 1.8, pitch: 2.0, volume: 1.0 },
+            calm: { rate: 0.6, pitch: 0.7, volume: 0.7 }
+        };
+
+        // Track pause state and speech position
+        let isPaused = false;
+        let currentText = '';
+        let shouldContinueSpeaking = false;
+        let currentCharIndex = 0; // Track current position in text
+        let speechStartTime = 0; // Track when speech started
+        let totalElapsedTime = 0; // Track total time elapsed
+
+        // Load available voices
+        function loadVoices() {
+            voices = synth.getVoices();
+
+            if (voices.length === 0) {
+                setTimeout(loadVoices, 100);
+                return;
+            }
+
+            voiceSelect.innerHTML = '';
+
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+
+                if (voice.default) {
+                    option.textContent += ' — DEFAULT';
+                }
+
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        // Initialize voices
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        // Update slider values and restart speech if playing
+        rateSlider.addEventListener('input', (e) => {
+            rateValue.textContent = parseFloat(e.target.value).toFixed(1);
+            if (synth.speaking && !synth.paused) {
+                restartSpeech();
+            }
+        });
+
+        pitchSlider.addEventListener('input', (e) => {
+            pitchValue.textContent = parseFloat(e.target.value).toFixed(1);
+            if (synth.speaking && !synth.paused) {
+                restartSpeech();
+            }
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            volumeValue.textContent = parseFloat(e.target.value).toFixed(1);
+            if (synth.speaking && !synth.paused) {
+                restartSpeech();
+            }
+        });
+
+        // Restart speech with current settings from current position
+        function restartSpeech() {
+    if (!currentText || !shouldContinueSpeaking) return;
+
+    const resumePosition = currentCharIndex;
+
+    console.log(
+        'Restarting from exact boundary position:',
+        resumePosition,
+        'of',
+        currentText.length
+    );
+
+    synth.cancel();
+
+    setTimeout(() => {
+        const remainingText = currentText.slice(resumePosition);
+
+        if (remainingText.trim().length === 0) {
+            console.log('No remaining text — stopping.');
+            stop();
+            return;
+        }
+
+        speakText(remainingText, resumePosition);
+    }, 50);
+}
+
+
+        // Apply emotion preset
+        function applyEmotion(emotion) {
+            const preset = emotionPresets[emotion];
+            if (preset) {
+                rateSlider.value = preset.rate;
+                pitchSlider.value = preset.pitch;
+                volumeSlider.value = preset.volume;
+
+                rateValue.textContent = preset.rate.toFixed(1);
+                pitchValue.textContent = preset.pitch.toFixed(1);
+                volumeValue.textContent = preset.volume.toFixed(1);
+
+                // Update active state
+                emotionBtns.forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                // Restart speech if currently speaking
+                if (synth.speaking && !synth.paused) {
+                    restartSpeech();
+                }
+            }
+        }
+
+        // Emotion button listeners
+        emotionBtns.forEach(btn => {
+            btn.addEventListener('click', (event) => {
+                const emotion = btn.getAttribute('data-emotion');
+                applyEmotion(emotion);
+            });
+        });
+
+        // Update status message
+        function updateStatus(message, show = true) {
+            status.textContent = message;
+            if (show) {
+                status.classList.add('active');
+            } else {
+                status.classList.remove('active');
+            }
+        }
+
+        // Core text-to-speech function
+        function speakText(text, startOffset = 0) {
+            // Create utterance
+            currentUtterance = new SpeechSynthesisUtterance(text);
+
+            // Set voice
+            currentUtterance.voice = voices[voiceSelect.value];
+
+            // Set parameters
+            currentUtterance.rate = parseFloat(rateSlider.value);
+            currentUtterance.pitch = parseFloat(pitchSlider.value);
+            currentUtterance.volume = parseFloat(volumeSlider.value);
+
+            // Track position for resume functionality
+            currentUtterance.onboundary = (event) => {
+                // Update current position (add startOffset to track position in full text)
+                currentCharIndex = startOffset + event.charIndex;
+            };
+
+            // Event listeners
+            currentUtterance.onstart = () => {
+                updateStatus('🔊 Speaking...');
+                speakBtn.disabled = true;
+                pauseResumeBtn.disabled = false;
+                pauseResumeBtn.textContent = '⏸ Pause';
+                isPaused = false;
+                stopBtn.disabled = false;
+                shouldContinueSpeaking = true;
+                speechStartTime = Date.now(); // Track when this segment started
+            };
+
+            currentUtterance.onend = () => {
+                updateStatus('✅ Speech completed');
+                speakBtn.disabled = false;
+                pauseResumeBtn.disabled = true;
+                pauseResumeBtn.textContent = '⏸ Pause';
+                isPaused = false;
+                stopBtn.disabled = true;
+                shouldContinueSpeaking = false;
+                currentCharIndex = 0; // Reset position
+                totalElapsedTime = 0; // Reset time tracking
+            };
+
+            currentUtterance.onerror = (event) => {
+                updateStatus(`❌ Error: ${event.error}`);
+                speakBtn.disabled = false;
+                pauseResumeBtn.disabled = true;
+                pauseResumeBtn.textContent = '⏸ Pause';
+                isPaused = false;
+                stopBtn.disabled = true;
+                shouldContinueSpeaking = false;
+                currentCharIndex = 0; // Reset position
+                totalElapsedTime = 0; // Reset time tracking
+            };
+
+            currentUtterance.onpause = () => {
+                updateStatus('⏸ Speech paused');
+                pauseResumeBtn.textContent = '▶ Resume';
+                isPaused = true;
+            };
+
+            currentUtterance.onresume = () => {
+                updateStatus('▶ Speech resumed');
+                pauseResumeBtn.textContent = '⏸ Pause';
+                isPaused = false;
+            };
+
+            // Speak
+            synth.speak(currentUtterance);
+        }
+
+        // Speak button handler
+        function speak() {
+            // Cancel any ongoing speech
+            if (synth.speaking) {
+                synth.cancel();
+            }
+
+            const text = textInput.value.trim();
+
+            if (text === '') {
+                updateStatus('⚠️ Please enter some text to speak');
+                return;
+            }
+
+            currentText = text;
+            currentCharIndex = 0; // Reset position for new speech
+            totalElapsedTime = 0; // Reset time tracking for new speech
+            speakText(text);
+        }
+
+        // Toggle pause/resume function
+        function togglePauseResume() {
+            if (synth.speaking) {
+                if (isPaused) {
+                    synth.resume();
+                } else {
+                    synth.pause();
+                }
+            }
+        }
+
+        // Stop function
+        function stop() {
+            if (synth.speaking) {
+                synth.cancel();
+                updateStatus('⏹ Speech stopped');
+                speakBtn.disabled = false;
+                pauseResumeBtn.disabled = true;
+                pauseResumeBtn.textContent = '⏸ Pause';
+                isPaused = false;
+                stopBtn.disabled = true;
+                shouldContinueSpeaking = false;
+                currentCharIndex = 0; // Reset position
+                totalElapsedTime = 0; // Reset time tracking
+            }
+        }
+
+        // Event listeners
+        speakBtn.addEventListener('click', speak);
+        pauseResumeBtn.addEventListener('click', togglePauseResume);
+        stopBtn.addEventListener('click', stop);
+
+        // Allow Enter key to speak (Ctrl+Enter in textarea)
+        textInput.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                speak();
+            }
+        });
+    </script>
+</body>
+
+</html>
