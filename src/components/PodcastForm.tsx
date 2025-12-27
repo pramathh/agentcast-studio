@@ -22,14 +22,11 @@ const TONES = [
 ];
 
 const LANGUAGES = [
-  { value: 'english', label: 'English' },
-  { value: 'spanish', label: 'Spanish' },
-  { value: 'french', label: 'French' },
-  { value: 'german', label: 'German' },
-  { value: 'hindi', label: 'Hindi' },
-  { value: 'portuguese', label: 'Portuguese' },
-  { value: 'japanese', label: 'Japanese' },
-  { value: 'arabic', label: 'Arabic' },
+  { value: 'English', label: 'English' },
+  { value: 'Kannada', label: 'Kannada' },
+  { value: 'Hindi', label: 'Hindi' },
+  { value: 'Tamil', label: 'Tamil' },
+  { value: 'Telugu', label: 'Telugu' },
 ];
 
 interface PodcastFormProps {

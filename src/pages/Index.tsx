@@ -25,12 +25,16 @@ const Index = () => {
       setLoadingStage('script');
       const podcastResponse = await generatePodcast(request);
 
+      // Backend returns a finished script string now.
+      const scriptString = podcastResponse.script;
+
       // Step 2: Generate audio
       setLoadingStage('audio');
-      const audioResponse = await generateAudio(podcastResponse.script);
+      // generateAudio now expects string
+      const audioResponse = await generateAudio(scriptString);
 
       setResult({
-        script: podcastResponse.script,
+        script: scriptString,
         audioUrl: audioResponse.audio_url,
       });
 
@@ -39,6 +43,7 @@ const Index = () => {
         description: 'Your podcast is ready to play and download.',
       });
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Generation Failed',
         description: error instanceof Error ? error.message : 'Something went wrong',
@@ -51,7 +56,7 @@ const Index = () => {
 
   const handleDownloadTranscript = () => {
     if (!result?.script) return;
-    
+
     const blob = new Blob([result.script], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -65,7 +70,7 @@ const Index = () => {
 
   const handleDownloadAudio = () => {
     if (!result?.audioUrl) return;
-    
+
     const a = document.createElement('a');
     a.href = result.audioUrl;
     a.download = 'podcast.mp3';
