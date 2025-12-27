@@ -2,16 +2,14 @@ import { useState } from 'react';
 import { PodcastForm } from '@/components/PodcastForm';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { TranscriptDisplay } from '@/components/TranscriptDisplay';
-import { AudioPlayer } from '@/components/AudioPlayer';
-import { generatePodcast, generateAudio, type PodcastRequest } from '@/services/podcast-api';
+import { generatePodcast, type PodcastRequest } from '@/services/podcast-api';
 import { useToast } from '@/hooks/use-toast';
 import { Podcast, Radio } from 'lucide-react';
 
-type LoadingStage = 'idle' | 'script' | 'audio';
+type LoadingStage = 'idle' | 'script';
 
 interface PodcastResult {
-  script: string;
-  audioUrl: string | null;
+  script: Array<Record<string, string>>;
 }
 
 const Index = () => {
@@ -25,17 +23,11 @@ const Index = () => {
       setLoadingStage('script');
       const podcastResponse = await generatePodcast(request);
 
-      // Backend returns a finished script string now.
-      const scriptString = podcastResponse.script;
-
-      // Step 2: Generate audio
-      setLoadingStage('audio');
-      // generateAudio now expects string
-      const audioResponse = await generateAudio(scriptString);
+      // Backend returns a structured list
+      const scriptData = podcastResponse.script;
 
       setResult({
-        script: scriptString,
-        audioUrl: audioResponse.audio_url,
+        script: scriptData,
       });
 
       toast({
@@ -57,7 +49,14 @@ const Index = () => {
   const handleDownloadTranscript = () => {
     if (!result?.script) return;
 
-    const blob = new Blob([result.script], { type: 'text/plain' });
+    // Convert structured script to text
+    const textContent = result.script.map(turn => {
+      return Object.entries(turn)
+        .map(([speaker, text]) => `${speaker}: ${text}`)
+        .join('\n');
+    }).join('\n\n');
+
+    const blob = new Blob([textContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -68,16 +67,7 @@ const Index = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadAudio = () => {
-    if (!result?.audioUrl) return;
 
-    const a = document.createElement('a');
-    a.href = result.audioUrl;
-    a.download = 'podcast.mp3';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
 
   const handleReset = () => {
     setResult(null);
@@ -145,12 +135,17 @@ const Index = () => {
             </div>
 
             {/* Audio Player */}
-            {result.audioUrl && (
-              <AudioPlayer audioUrl={result.audioUrl} onDownload={handleDownloadAudio} />
-            )}
+
 
             {/* Transcript */}
-            <TranscriptDisplay script={result.script} onDownload={handleDownloadTranscript} />
+            {/* Transcript */}
+            {result.script ? (
+              <TranscriptDisplay script={result.script} onDownload={handleDownloadTranscript} />
+            ) : (
+              <div className="text-center p-8 bg-secondary/30 rounded-lg">
+                <p className="text-muted-foreground">No script was generated. Please try again with a different topic.</p>
+              </div>
+            )}
           </div>
         )}
       </main>

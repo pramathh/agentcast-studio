@@ -7,6 +7,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/generate-podcast': 'http://localhost:8000',
+      '/translate': 'http://localhost:8000',
+    }
   },
   plugins: [react()].filter(Boolean),
   resolve: {
