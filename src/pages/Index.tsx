@@ -3,15 +3,17 @@ import { PodcastForm } from '@/components/PodcastForm';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { TranscriptDisplay } from '@/components/TranscriptDisplay';
 import { AudioPlayer } from '@/components/AudioPlayer';
-import { generatePodcast, generateAudio, type PodcastRequest } from '@/services/podcast-api';
+import { generatePodcast, generateSpeech, type PodcastRequest, type ScriptItem } from '@/services/podcast-api';
 import { useToast } from '@/hooks/use-toast';
-import { Podcast, Radio } from 'lucide-react';
+import { Podcast, Radio, FileAudio } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 type LoadingStage = 'idle' | 'script' | 'audio';
 
 interface PodcastResult {
-  script: string;
+  script: ScriptItem[];
   audioUrl: string | null;
+  language: string;
 }
 
 const Index = () => {
@@ -25,22 +27,15 @@ const Index = () => {
       setLoadingStage('script');
       const podcastResponse = await generatePodcast(request);
 
-      // Backend returns a finished script string now.
-      const scriptString = podcastResponse.script;
-
-      // Step 2: Generate audio
-      setLoadingStage('audio');
-      // generateAudio now expects string
-      const audioResponse = await generateAudio(scriptString);
-
       setResult({
-        script: scriptString,
-        audioUrl: audioResponse.audio_url,
+        script: podcastResponse.script,
+        audioUrl: null,
+        language: podcastResponse.language
       });
 
       toast({
-        title: 'Podcast Generated!',
-        description: 'Your podcast is ready to play and download.',
+        title: 'Podcast Script Generated!',
+        description: 'You can now generate the audio.',
       });
     } catch (error) {
       console.error(error);
@@ -54,10 +49,45 @@ const Index = () => {
     }
   };
 
+  const handleGenerateAudio = async () => {
+    if (!result || !result.script) return;
+
+    try {
+      setLoadingStage('audio');
+      const ttsResponse = await generateSpeech(result.script, result.language);
+
+      setResult(prev => prev ? ({
+        ...prev,
+        audioUrl: ttsResponse.audio_file
+      }) : null);
+
+      toast({
+        title: 'Audio Generated!',
+        description: 'Your podcast is ready to listen.',
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Audio Generation Failed',
+        description: error instanceof Error ? error.message : 'Something went wrong',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingStage('idle');
+    }
+  }
+
   const handleDownloadTranscript = () => {
     if (!result?.script) return;
 
-    const blob = new Blob([result.script], { type: 'text/plain' });
+    // Logic moved to internal component or we can reproduce text logic here if needed.
+    // But TranscriptDisplay handles generic download if we want, or we can customize.
+    const textContent = result.script.map(item => {
+      return Object.entries(item).map(([speaker, text]) => `${speaker}: ${text}`).join('\n');
+    }).join('\n\n');
+
+    const blob = new Blob([textContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -140,9 +170,23 @@ const Index = () => {
 
             {/* Results Header */}
             <div className="text-center animate-fade-in">
-              <h2 className="text-3xl font-bold text-foreground mb-2">Your Podcast is Ready!</h2>
-              <p className="text-muted-foreground">Listen to your generated podcast or download the files</p>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Your Podcast Script is Ready!</h2>
+              <p className="text-muted-foreground">Review the script below. Generate audio to listen.</p>
             </div>
+
+            {/* Manual Audio Generation Trigger */}
+            {!result.audioUrl && (
+              <div className="flex justify-center animate-fade-in">
+                <Button
+                  onClick={handleGenerateAudio}
+                  size="lg"
+                  className="animate-pulse bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105"
+                >
+                  <FileAudio className="w-5 h-5 mr-2" />
+                  Generate Audio Now
+                </Button>
+              </div>
+            )}
 
             {/* Audio Player */}
             {result.audioUrl && (
