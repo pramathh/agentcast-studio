@@ -54,6 +54,7 @@ export const generatePodcast = async (request: PodcastRequest): Promise<PodcastR
   const scriptContent = genData.script || [];
 
   const responseData: PodcastResponse = {
+    language: request.language,
     ...genData,
     script: scriptContent,
   };
@@ -102,3 +103,31 @@ export const generatePodcast = async (request: PodcastRequest): Promise<PodcastR
 };
 
 
+
+export interface TTSRequest {
+  script: Array<Record<string, string>>;
+  language: string;
+}
+
+export interface TTSResponse {
+  audio_file: string;
+  language: string;
+}
+
+export const generateTTS = async (request: TTSRequest): Promise<TTSResponse> => {
+  console.log(`Generating TTS for language: ${request.language}`);
+  const response = await fetch(`${API_BASE_URL}/text-to-speech`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to generate TTS: ${errorText}`);
+  }
+
+  return response.json();
+};

@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => ({
     proxy: {
       '/generate-podcast': 'http://localhost:8000',
       '/translate': 'http://localhost:8000',
+      '/text-to-speech': 'http://localhost:8000',
+      '/static': 'http://localhost:8000',
     }
   },
   plugins: [react()].filter(Boolean),
