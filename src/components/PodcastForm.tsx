@@ -21,7 +21,7 @@ const TONES = [
   { value: 'inspirational', label: 'Inspirational' },
 ];
 
-const LANGUAGES = [
+export const LANGUAGES = [
   { value: 'English', label: 'English' },
   { value: 'Kannada', label: 'Kannada' },
   { value: 'Hindi', label: 'Hindi' },
@@ -37,7 +37,7 @@ interface PodcastFormProps {
 export const PodcastForm = ({ onSubmit, isLoading }: PodcastFormProps) => {
   const [topic, setTopic] = useState('');
   const [tone, setTone] = useState('');
-  const [language, setLanguage] = useState('');
+  const [language] = useState('English');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,47 +64,24 @@ export const PodcastForm = ({ onSubmit, isLoading }: PodcastFormProps) => {
         />
       </div>
 
-      {/* Tone and Language Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Tone Select */}
-        <div className="space-y-2">
-          <Label htmlFor="tone" className="text-foreground font-medium">
-            Tone
-          </Label>
-          <Select value={tone} onValueChange={setTone}>
-            <SelectTrigger className="h-12 bg-secondary border-border text-foreground">
-              <SelectValue placeholder="Select tone" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
-              {TONES.map((t) => (
-                <SelectItem key={t.value} value={t.value} className="text-foreground hover:bg-secondary">
-                  {t.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Language Select */}
-        <div className="space-y-2">
-          <Label htmlFor="language" className="text-foreground font-medium">
-            Language
-          </Label>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="h-12 bg-secondary border-border text-foreground">
-              <SelectValue placeholder="Select language" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
-              {LANGUAGES.map((l) => (
-                <SelectItem key={l.value} value={l.value} className="text-foreground hover:bg-secondary">
-                  {l.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Tone Select */}
+      <div className="space-y-2 w-full">
+        <Label htmlFor="tone" className="text-foreground font-medium">
+          Tone
+        </Label>
+        <Select value={tone} onValueChange={setTone}>
+          <SelectTrigger className="h-12 bg-secondary border-border text-foreground">
+            <SelectValue placeholder="Select tone" />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border">
+            {TONES.map((t) => (
+              <SelectItem key={t.value} value={t.value} className="text-foreground hover:bg-secondary">
+                {t.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-
       {/* Submit Button */}
       <Button
         type="submit"

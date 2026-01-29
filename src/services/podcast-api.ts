@@ -131,3 +131,21 @@ export const generateTTS = async (request: TTSRequest): Promise<TTSResponse> => 
 
   return response.json();
 };
+
+export const translateScript = async (request: TranslationRequest): Promise<TranslationResponse> => {
+  console.log(`Translating script to: ${request.target_language}`);
+  const response = await fetch(`${API_BASE_URL}/translate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to translate script: ${errorText}`);
+  }
+
+  return response.json();
+};

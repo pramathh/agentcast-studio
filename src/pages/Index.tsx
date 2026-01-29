@@ -1,12 +1,19 @@
 import { useState } from 'react';
-import { PodcastForm } from '@/components/PodcastForm';
+import { PodcastForm, LANGUAGES } from '@/components/PodcastForm';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { TranscriptDisplay } from '@/components/TranscriptDisplay';
-import { generatePodcast, generateTTS, type PodcastRequest } from '@/services/podcast-api';
+import { generatePodcast, generateTTS, translateScript, type PodcastRequest } from '@/services/podcast-api';
 import { useToast } from '@/hooks/use-toast';
-import { Podcast, Radio, Download, Play, Loader2 } from 'lucide-react';
+import { Podcast, Radio, Download, Play, Loader2, Languages } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type LoadingStage = 'idle' | 'script';
 
@@ -20,6 +27,9 @@ const Index = () => {
   const [loadingStage, setLoadingStage] = useState<LoadingStage>('idle');
   const [result, setResult] = useState<PodcastResult | null>(null);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationLanguage, setTranslationLanguage] = useState<string>("");
+  const [hasTranslated, setHasTranslated] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -124,11 +134,52 @@ const Index = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleTranslate = async () => {
+    if (!result?.script || !translationLanguage) return;
+
+    setIsTranslating(true);
+    try {
+      const response = await translateScript({
+        script: result.script,
+        target_language: translationLanguage,
+      });
+
+      setResult((prev) =>
+        prev
+          ? {
+            ...prev,
+            script: response.translated_script || prev.script,
+            language: response.language,
+          }
+          : null
+      );
+
+      setAudioUrl(null);
+      setHasTranslated(true);
+
+      toast({
+        title: 'Translation Complete!',
+        description: `Podcast translated to ${response.language}`,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Translation Failed',
+        description: error instanceof Error ? error.message : 'Could not translate podcast',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
 
 
   const handleReset = () => {
     setResult(null);
     setAudioUrl(null);
+    setHasTranslated(false);
+    setTranslationLanguage("");
   };
 
   return (
@@ -262,6 +313,41 @@ const Index = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Translation Controls */}
+            {!hasTranslated && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card/30 rounded-xl border border-border/50 animate-fade-in">
+                <div className="flex items-center gap-2 text-foreground">
+                  <Languages className="w-5 h-5 text-primary" />
+                  <h3 className="font-semibold">Translate Transcript</h3>
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <Select value={translationLanguage} onValueChange={setTranslationLanguage}>
+                    <SelectTrigger className="w-full sm:w-[180px] bg-background border-border">
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.filter(l => l.value !== 'English').map((l) => (
+                        <SelectItem key={l.value} value={l.value}>
+                          {l.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleTranslate}
+                    disabled={isTranslating || !translationLanguage}
+                    className="min-w-[100px]"
+                  >
+                    {isTranslating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Translate'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Transcript */}
             {/* Transcript */}
