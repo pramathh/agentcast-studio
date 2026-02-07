@@ -263,7 +263,7 @@ const Index = () => {
 
                     <Button
                       onClick={handleGenerateAudio}
-                      disabled={isGeneratingAudio}
+                      disabled={isGeneratingAudio || isTranslating}
                       size="lg"
                       className="w-full sm:w-auto min-w-[200px] h-12 text-lg font-medium shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all rounded-full"
                     >
@@ -336,7 +336,7 @@ const Index = () => {
                   </Select>
                   <Button
                     onClick={handleTranslate}
-                    disabled={isTranslating || !translationLanguage}
+                    disabled={isTranslating || !translationLanguage || isGeneratingAudio}
                     className="min-w-[100px]"
                   >
                     {isTranslating ? (
